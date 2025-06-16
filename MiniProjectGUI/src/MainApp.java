@@ -10,38 +10,53 @@ import view.*;
 public class MainApp extends Application {
 
     private StudentManagementSystemGUI smsGUI;
-    private StackPane centerPane; // Để hoán đổi các chế độ xem khác nhau
+    private StackPane centerPane;
     private StudentView studentView;
     private CourseView courseView;
     private GradeView gradeView;
-    private ReportView reportView;
+    private ReportView reportView; // Keep reference to ReportView
+    private RegistrationView registrationView;
 
     @Override
     public void start(Stage primaryStage) {
-        // Khởi tạo hệ thống quản lý sinh viên GUI
-        StudentManagementSystemGUI smsGUI = new StudentManagementSystemGUI();
+        smsGUI = new StudentManagementSystemGUI();
 
-        // Khởi tạo các View
-        StudentView studentView = new StudentView(smsGUI);
-        CourseView courseView = new CourseView(smsGUI);
-        GradeView gradeView = new GradeView(smsGUI);
-        ReportView reportView = new ReportView(smsGUI);
-        RegistrationView registrationView = new RegistrationView(smsGUI); // Khởi tạo RegistrationView
+        studentView = new StudentView(smsGUI);
+        courseView = new CourseView(smsGUI);
+        gradeView = new GradeView(smsGUI);
+        reportView = new ReportView(smsGUI); // Initialize ReportView
+        registrationView = new RegistrationView(smsGUI);
 
-        // Tạo TabPane để chứa các View
+        // Pass references to other views to smsGUI so it can notify them
+        smsGUI.setStudentView(studentView);
+        smsGUI.setCourseView(courseView);
+        smsGUI.setRegistrationView(registrationView);
+        smsGUI.setGradeView(gradeView);
+        smsGUI.setReportView(reportView); // Pass reportView to smsGUI
+
         TabPane tabPane = new TabPane();
-        tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE); // Không cho phép đóng tab
+        tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
-        // Tạo các Tab và thêm View vào
         Tab studentTab = new Tab("Quản lý Sinh viên", studentView.getStudentView());
         Tab courseTab = new Tab("Quản lý Môn học", courseView.getCourseView());
-        Tab registrationTab = new Tab("Đăng ký Môn học", registrationView.getRegistrationView()); // Thêm tab đăng ký
+        Tab registrationTab = new Tab("Đăng ký Môn học", registrationView.getRegistrationView());
         Tab gradeTab = new Tab("Nhập điểm", gradeView.getGradeInputView());
-        Tab reportTab = new Tab("Báo cáo", reportView.getReportView());
 
-        tabPane.getTabs().addAll(studentTab, courseTab, registrationTab, gradeTab, reportTab); // Thêm registrationTab vào danh sách
+        // New tabs for Graduation Check and Transcript
+        Tab graduationCheckTab = new Tab("Kiểm tra Tốt nghiệp", reportView.getGraduationCheckView()); // New Tab
+        Tab transcriptTab = new Tab("Xem Bảng điểm", reportView.getTranscriptView()); // New Tab
 
-        Scene scene = new Scene(tabPane, 1000, 700); // Kích thước cửa sổ
+        // Add all tabs to the TabPane
+        tabPane.getTabs().addAll(
+                studentTab,
+                courseTab,
+                registrationTab,
+                gradeTab,
+                graduationCheckTab, // Add new tab
+                transcriptTab       // Add new tab
+        );
+
+        Scene scene = new Scene(tabPane, 1000, 700);
         primaryStage.setTitle("Hệ Thống Quản Lý Sinh Viên");
         primaryStage.setScene(scene);
         primaryStage.show();

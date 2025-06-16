@@ -27,10 +27,6 @@ public abstract class Student {
         return studentID;
     }
 
-    public void setStudentID(String studentID) {
-        this.studentID = studentID;
-    }
-
     public String getName() {
         return name;
     }
@@ -73,10 +69,6 @@ public abstract class Student {
 
     public List<Course> getCourses() {
         return courses;
-    }
-
-    public void setCourses(List<Course> courses) {
-        this.courses = courses;
     }
 
     public abstract boolean registerCourse(Course course);

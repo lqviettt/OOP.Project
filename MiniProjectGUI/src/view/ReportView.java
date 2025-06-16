@@ -14,40 +14,40 @@ public class ReportView {
 
     private StudentManagementSystemGUI smsGUI;
 
-    // Các thành phần cho chức năng kiểm tra tốt nghiệp
+    // Components for Graduation Check
     private ChoiceBox<Student> studentGraduationChoiceBox;
     private Label graduationStatusLabel;
 
-    // Các thành phần cho chức năng xem bảng điểm
+    // Components for Transcript View
     private ChoiceBox<Student> studentForTranscriptChoiceBox;
-    private TextArea reportTextArea; // Đổi tên thành reportTextArea theo yêu cầu của bạn
-    private Label transcriptMessageLabel; // Label mới cho thông báo bảng điểm
+    private TextArea reportTextArea;
+    private Label transcriptMessageLabel;
 
     public ReportView(StudentManagementSystemGUI smsGUI) {
         this.smsGUI = smsGUI;
-        initializeUI();
+        // Bỏ các lệnh gọi refresh khỏi constructor
+        // refreshStudentGraduationChoices(); // <-- BỎ DÒNG NÀY
+        // refreshStudentForTranscriptChoices(); // <-- BỎ DÒNG NÀY
     }
 
-    private void initializeUI() {
-        // --- Phần kiểm tra tốt nghiệp ---
+    // --- Public methods to get separate UI sections ---
+
+    public Parent getGraduationCheckView() {
         GridPane graduationGrid = new GridPane();
         graduationGrid.setHgap(10);
         graduationGrid.setVgap(10);
         graduationGrid.setPadding(new Insets(10));
 
-        studentGraduationChoiceBox = new ChoiceBox<>();
+        studentGraduationChoiceBox = new ChoiceBox<>(); // Khởi tạo ChoiceBox ở đây
         studentGraduationChoiceBox.setConverter(new javafx.util.StringConverter<Student>() {
             @Override
             public String toString(Student student) {
                 return student != null ? student.getStudentID() + " - " + student.getName() : "Chọn sinh viên";
             }
-
             @Override
-            public Student fromString(String string) {
-                return null;
-            }
+            public Student fromString(String string) { return null; }
         });
-        refreshStudentGraduationChoices();
+        refreshStudentGraduationChoices(); // Sau khi khởi tạo, gọi refresh để điền dữ liệu
         studentGraduationChoiceBox.getSelectionModel().selectFirst();
 
         Button checkGraduationButton = new Button("Kiểm tra Tốt nghiệp");
@@ -59,65 +59,81 @@ public class ReportView {
         graduationGrid.addRow(1, checkGraduationButton);
         graduationGrid.add(graduationStatusLabel, 0, 2, 2, 1);
 
-        // --- Phần xem bảng điểm của sinh viên ---
+        VBox layout = new VBox(15);
+        layout.setPadding(new Insets(15));
+        layout.getChildren().addAll(
+                new Label("KIỂM TRA ĐIỀU KIỆN TỐT NGHIỆP"),
+                new Separator(),
+                graduationGrid
+        );
+        return layout;
+    }
+
+    public Parent getTranscriptView() {
         GridPane transcriptGrid = new GridPane();
         transcriptGrid.setHgap(10);
         transcriptGrid.setVgap(10);
         transcriptGrid.setPadding(new Insets(10));
 
-        studentForTranscriptChoiceBox = new ChoiceBox<>();
+        studentForTranscriptChoiceBox = new ChoiceBox<>(); // Khởi tạo ChoiceBox ở đây
         studentForTranscriptChoiceBox.setConverter(new javafx.util.StringConverter<Student>() {
             @Override
             public String toString(Student student) {
                 return student != null ? student.getStudentID() + " - " + student.getName() : "Chọn sinh viên";
             }
-
             @Override
-            public Student fromString(String string) {
-                return null;
-            }
+            public Student fromString(String string) { return null; }
         });
-        refreshStudentForTranscriptChoices();
+        refreshStudentForTranscriptChoices(); // Sau khi khởi tạo, gọi refresh để điền dữ liệu
         studentForTranscriptChoiceBox.getSelectionModel().selectFirst();
 
         Button viewTranscriptButton = new Button("Xem Bảng điểm");
         viewTranscriptButton.setOnAction(e -> viewTranscript());
-        reportTextArea = new TextArea(); // Sử dụng tên reportTextArea
+        reportTextArea = new TextArea();
         reportTextArea.setEditable(false);
         reportTextArea.setWrapText(true);
-        reportTextArea.setPrefRowCount(10); // Tăng kích thước để hiển thị nhiều điểm hơn
+        reportTextArea.setPrefRowCount(10);
 
-        transcriptMessageLabel = new Label(""); // Khởi tạo label mới
+        transcriptMessageLabel = new Label("");
         transcriptMessageLabel.setTextFill(Color.BLUE);
 
         transcriptGrid.addRow(0, new Label("Sinh viên:"), studentForTranscriptChoiceBox);
         transcriptGrid.addRow(1, viewTranscriptButton);
         transcriptGrid.add(reportTextArea, 0, 2, 2, 1);
-        transcriptGrid.add(transcriptMessageLabel, 0, 3, 2, 1); // Thêm label vào grid
+        transcriptGrid.add(transcriptMessageLabel, 0, 3, 2, 1);
 
-        // --- Layout tổng thể ---
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(15));
         layout.getChildren().addAll(
-                new Label("KIỂM TRA TỐT NGHIỆP"),
-                new Separator(),
-                graduationGrid,
-                new Label("BẢNG ĐIỂM CỦA SINH VIÊN"),
+                new Label("XEM BẢNG ĐIỂM CỦA SINH VIÊN"),
                 new Separator(),
                 transcriptGrid
         );
+        return layout;
     }
 
-    private void refreshStudentGraduationChoices() {
+    // --- Private helper methods (unchanged) ---
+
+    // Make public for external refresh
+    public void refreshStudentGraduationChoices() {
         ObservableList<Student> students = FXCollections.observableArrayList(smsGUI.getAllStudents());
-        studentGraduationChoiceBox.setItems(students);
-        studentGraduationChoiceBox.getItems().add(0, null);
+        // Đảm bảo studentGraduationChoiceBox không null trước khi sử dụng
+        if (studentGraduationChoiceBox != null) {
+            studentGraduationChoiceBox.setItems(students);
+            studentGraduationChoiceBox.getItems().add(0, null);
+            studentGraduationChoiceBox.getSelectionModel().select(0);
+        }
     }
 
-    private void refreshStudentForTranscriptChoices() {
+    // Make public for external refresh
+    public void refreshStudentForTranscriptChoices() {
         ObservableList<Student> students = FXCollections.observableArrayList(smsGUI.getAllStudents());
-        studentForTranscriptChoiceBox.setItems(students);
-        studentForTranscriptChoiceBox.getItems().add(0, null);
+        // Đảm bảo studentForTranscriptChoiceBox không null trước khi sử dụng
+        if (studentForTranscriptChoiceBox != null) {
+            studentForTranscriptChoiceBox.setItems(students);
+            studentForTranscriptChoiceBox.getItems().add(0, null);
+            studentForTranscriptChoiceBox.getSelectionModel().select(0);
+        }
     }
 
     private void checkGraduation() {
@@ -136,22 +152,15 @@ public class ReportView {
     private void viewTranscript() {
         Student selectedStudent = studentForTranscriptChoiceBox.getSelectionModel().getSelectedItem();
         if (selectedStudent != null) {
-            // Thay vì in ra console, chúng ta sẽ bắt đầu in vào String và hiển thị
-            // Sử dụng một ByteArrayOutputStream để chuyển hướng System.out
             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
             java.io.PrintStream ps = new java.io.PrintStream(baos);
             java.io.PrintStream old = System.out;
             System.setOut(ps);
 
-            // Giả định rằng selectedStudent.viewTranscript() tồn tại và in ra System.out
-            // Nếu phương thức này nằm trong StudentManagementSystemGUI hoặc StudentManagementSystem
-            // bạn sẽ cần gọi nó thông qua smsGUI hoặc đối tượng Student tương ứng.
-            // Ví dụ: smsGUI.displayStudentTranscript(selectedStudent.getStudentID());
-            // Hoặc, nếu method viewTranscript() là của class Student
             selectedStudent.viewTranscript();
 
             System.out.flush();
-            System.setOut(old); // Khôi phục System.out
+            System.setOut(old);
             reportTextArea.setText(baos.toString());
             transcriptMessageLabel.setTextFill(Color.GREEN);
             transcriptMessageLabel.setText("Đã hiển thị bảng điểm.");
@@ -160,72 +169,5 @@ public class ReportView {
             reportTextArea.setText("");
             transcriptMessageLabel.setTextFill(Color.RED);
         }
-    }
-
-
-    public Parent getReportView() {
-        VBox layout = new VBox(15);
-        layout.setPadding(new Insets(15));
-
-        GridPane graduationGrid = new GridPane();
-        graduationGrid.setHgap(10);
-        graduationGrid.setVgap(10);
-        graduationGrid.setPadding(new Insets(10));
-        studentGraduationChoiceBox = new ChoiceBox<>();
-        studentGraduationChoiceBox.setConverter(new javafx.util.StringConverter<Student>() {
-            @Override
-            public String toString(Student student) { return student != null ? student.getStudentID() + " - " + student.getName() : "Chọn sinh viên"; }
-            @Override
-            public Student fromString(String string) { return null; }
-        });
-        Button checkGraduationButton = new Button("Kiểm tra Tốt nghiệp");
-        checkGraduationButton.setOnAction(e -> checkGraduation());
-        graduationStatusLabel = new Label("");
-        graduationStatusLabel.setTextFill(Color.BLUE);
-        graduationGrid.addRow(0, new Label("Sinh viên:"), studentGraduationChoiceBox);
-        graduationGrid.addRow(1, checkGraduationButton);
-        graduationGrid.add(graduationStatusLabel, 0, 2, 2, 1);
-
-        GridPane transcriptGrid = new GridPane();
-        transcriptGrid.setHgap(10);
-        transcriptGrid.setVgap(10);
-        transcriptGrid.setPadding(new Insets(10));
-        studentForTranscriptChoiceBox = new ChoiceBox<>();
-        studentForTranscriptChoiceBox.setConverter(new javafx.util.StringConverter<Student>() {
-            @Override
-            public String toString(Student student) { return student != null ? student.getStudentID() + " - " + student.getName() : "Chọn sinh viên"; }
-            @Override
-            public Student fromString(String string) { return null; }
-        });
-        Button viewTranscriptButton = new Button("Xem Bảng điểm");
-        viewTranscriptButton.setOnAction(e -> viewTranscript());
-        reportTextArea = new TextArea();
-        reportTextArea.setEditable(false);
-        reportTextArea.setWrapText(true);
-        reportTextArea.setPrefRowCount(10);
-
-        transcriptMessageLabel = new Label("");
-        transcriptMessageLabel.setTextFill(Color.BLUE);
-
-        transcriptGrid.addRow(0, new Label("Sinh viên:"), studentForTranscriptChoiceBox);
-        transcriptGrid.addRow(1, viewTranscriptButton);
-        transcriptGrid.add(reportTextArea, 0, 2, 2, 1);
-        transcriptGrid.add(transcriptMessageLabel, 0, 3, 2, 1);
-
-        refreshStudentGraduationChoices();
-        refreshStudentForTranscriptChoices();
-        studentGraduationChoiceBox.getSelectionModel().selectFirst();
-        studentForTranscriptChoiceBox.getSelectionModel().selectFirst();
-
-
-        layout.getChildren().addAll(
-                new Label("KIỂM TRA TỐT NGHIỆP"),
-                new Separator(),
-                graduationGrid,
-                new Label("BẢNG ĐIỂM CỦA SINH VIÊN"),
-                new Separator(),
-                transcriptGrid
-        );
-        return layout;
     }
 }

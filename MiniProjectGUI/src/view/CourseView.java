@@ -7,7 +7,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.BorderPane; // Import BorderPane
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -30,20 +30,18 @@ public class CourseView {
     private ChoiceBox<Course> prerequisiteChoiceBox;
     private Label messageLabel;
 
-    // Các thành phần mới cho chức năng xem sinh viên đã đăng ký
     private TextArea enrolledStudentsArea;
     private Button viewEnrolledStudentsButton;
 
-    private BorderPane mainLayout; // Thay đổi từ VBox sang BorderPane
+    private BorderPane mainLayout;
 
     public CourseView(StudentManagementSystemGUI smsGUI) {
         this.smsGUI = smsGUI;
         initializeUI();
-        loadCourseData(); // Tải dữ liệu ban đầu
+        loadCourseData();
     }
 
     private void initializeUI() {
-        // Form nhập liệu
         GridPane formGrid = new GridPane();
         formGrid.setHgap(10);
         formGrid.setVgap(10);
@@ -74,10 +72,10 @@ public class CourseView {
                 return null;
             }
         });
-        loadPrerequisiteChoices(); // Tải các môn học có thể làm tiên quyết
+        loadPrerequisiteChoices();
 
         messageLabel = new Label("");
-        messageLabel.setTextFill(Color.BLUE); // Mặc định màu xanh
+        messageLabel.setTextFill(Color.BLUE);
 
         formGrid.addRow(0, new Label("ID:"), idField);
         formGrid.addRow(1, new Label("Tên:"), nameField);
@@ -88,7 +86,6 @@ public class CourseView {
         formGrid.addRow(6, new Label("Tiên quyết:"), prerequisiteChoiceBox);
         formGrid.add(messageLabel, 0, 7, 2, 1);
 
-        // Nút chức năng
         Button addButton = new Button("Thêm");
         addButton.setOnAction(e -> addCourse());
         Button updateButton = new Button("Cập nhật");
@@ -96,13 +93,12 @@ public class CourseView {
         Button deleteButton = new Button("Xóa");
         deleteButton.setOnAction(e -> deleteCourse());
         Button clearButton = new Button("Xóa form");
-        clearButton.setOnAction(e -> clearFormFieldsOnly()); // Gọi phương thức mới để chỉ xóa các trường
+        clearButton.setOnAction(e -> clearFormFieldsOnly());
 
         HBox buttonBox = new HBox(10);
         buttonBox.setPadding(new Insets(10));
         buttonBox.getChildren().addAll(addButton, updateButton, deleteButton, clearButton);
 
-        // Bảng hiển thị môn học
         courseTable = new TableView<>();
         TableColumn<Course, String> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("courseID"));
@@ -135,16 +131,14 @@ public class CourseView {
                 finalWeightField.setText(String.valueOf(newSelection.getFinalWeight()));
                 maxCapacityField.setText(String.valueOf(newSelection.getMaxCapacity()));
                 prerequisiteChoiceBox.getSelectionModel().select(newSelection.getPrerequisite());
-                // Tự động hiển thị sinh viên đã đăng ký khi chọn môn học
                 viewSelectedCourseEnrolledStudents();
-                messageLabel.setText(""); // Xóa thông báo khi chọn một môn học mới
+                messageLabel.setText("");
                 messageLabel.setTextFill(Color.BLUE);
             } else {
-                clearFormFieldsOnly(); // Khi không có lựa chọn nào, reset form
+                clearFormFieldsOnly();
             }
         });
 
-        // --- Phần xem sinh viên đã đăng ký môn học ---
         enrolledStudentsArea = new TextArea();
         enrolledStudentsArea.setEditable(false);
         enrolledStudentsArea.setWrapText(true);
@@ -154,14 +148,11 @@ public class CourseView {
         viewEnrolledStudentsButton = new Button("Xem SV đã ĐK");
         viewEnrolledStudentsButton.setOnAction(e -> viewSelectedCourseEnrolledStudents());
 
-
-        // --- Cấu trúc layout bằng BorderPane ---
         mainLayout = new BorderPane();
         mainLayout.setPadding(new Insets(10));
 
-        // VBox cho phần bên trái (Form, Buttons, Table)
         VBox leftPanel = new VBox(10);
-        leftPanel.setPadding(new Insets(0, 10, 0, 0)); // Padding bên phải để tạo khoảng cách
+        leftPanel.setPadding(new Insets(0, 10, 0, 0));
         leftPanel.getChildren().addAll(
                 new Label("QUẢN LÝ MÔN HỌC"),
                 new Separator(),
@@ -170,10 +161,9 @@ public class CourseView {
                 courseTable
         );
 
-        // VBox cho phần bên phải (Enrolled Students)
         VBox rightPanel = new VBox(10);
-        rightPanel.setPadding(new Insets(0, 0, 0, 10)); // Padding bên trái để tạo khoảng cách
-        rightPanel.setPrefWidth(300); // Đặt chiều rộng ưu tiên cho panel bên phải
+        rightPanel.setPadding(new Insets(0, 0, 0, 10));
+        rightPanel.setPrefWidth(300);
         rightPanel.getChildren().addAll(
                 new Label("SINH VIÊN ĐÃ ĐĂNG KÝ (MÔN HỌC ĐANG CHỌN)"),
                 new Separator(),
@@ -185,36 +175,38 @@ public class CourseView {
         mainLayout.setRight(rightPanel);
     }
 
-    private void loadCourseData() {
+    // Make public so smsGUI can call it
+    public void loadCourseData() {
         courseObservableList = FXCollections.observableArrayList(smsGUI.getAllCourses());
         courseTable.setItems(courseObservableList);
-        loadPrerequisiteChoices(); // Cập nhật danh sách tiên quyết khi dữ liệu môn học thay đổi
+        courseTable.refresh(); // Explicitly refresh the table
+        loadPrerequisiteChoices();
     }
 
     private void loadPrerequisiteChoices() {
         ObservableList<Course> courses = FXCollections.observableArrayList(smsGUI.getAllCourses());
         prerequisiteChoiceBox.setItems(courses);
-        prerequisiteChoiceBox.getItems().add(0, null); // Thêm tùy chọn "Không có môn tiên quyết"
-        prerequisiteChoiceBox.getSelectionModel().select(0); // Chọn mặc định là null
+        prerequisiteChoiceBox.getItems().add(0, null);
+        prerequisiteChoiceBox.getSelectionModel().select(0);
     }
 
-    private void clearFormFieldsOnly() { // Đổi tên để rõ ràng hơn
+    private void clearFormFieldsOnly() {
         idField.clear();
         nameField.clear();
         creditsField.clear();
         midtermWeightField.clear();
         finalWeightField.clear();
         maxCapacityField.clear();
-        prerequisiteChoiceBox.getSelectionModel().select(0); // Chọn "Không có môn tiên quyết"
-        messageLabel.setText(""); // Xóa thông báo khi người dùng nhấn nút "Xóa form"
+        prerequisiteChoiceBox.getSelectionModel().select(0);
+        messageLabel.setText("");
         messageLabel.setTextFill(Color.BLUE);
         courseTable.getSelectionModel().clearSelection();
-        enrolledStudentsArea.clear(); // Xóa nội dung khi clear form
+        enrolledStudentsArea.clear();
     }
 
     private void addCourse() {
-        messageLabel.setText(""); // Xóa thông báo cũ
-        messageLabel.setTextFill(Color.BLUE); // Đặt lại màu mặc định
+        messageLabel.setText("");
+        messageLabel.setTextFill(Color.BLUE);
 
         try {
             String courseId = idField.getText();
@@ -244,8 +236,7 @@ public class CourseView {
 
             Course newCourse = new Course(courseId, name, credits, midtermWeight, finalWeight, maxCapacity, prerequisite);
             smsGUI.addCourse(newCourse);
-            loadCourseData(); // Tải lại dữ liệu sau khi thêm
-            // Không clearFormFieldsOnly() ở đây để thông báo được hiển thị
+            loadCourseData(); // Calls refresh
             messageLabel.setText("Thêm môn học thành công!");
             messageLabel.setTextFill(Color.GREEN);
         } catch (NumberFormatException e) {
@@ -261,8 +252,8 @@ public class CourseView {
     }
 
     private void updateCourse() {
-        messageLabel.setText(""); // Xóa thông báo cũ
-        messageLabel.setTextFill(Color.BLUE); // Đặt lại màu mặc định
+        messageLabel.setText("");
+        messageLabel.setTextFill(Color.BLUE);
 
         try {
             String courseId = idField.getText();
@@ -274,7 +265,6 @@ public class CourseView {
                 return;
             }
 
-            // Kiểm tra các trường bắt buộc không được rỗng khi cập nhật
             if (nameField.getText().isEmpty() || creditsField.getText().isEmpty() ||
                     midtermWeightField.getText().isEmpty() || finalWeightField.getText().isEmpty() ||
                     maxCapacityField.getText().isEmpty()) {
@@ -306,8 +296,7 @@ public class CourseView {
             existingCourse.setMaxCapacity(maxCapacity);
             existingCourse.setPrerequisite(prerequisiteChoiceBox.getSelectionModel().getSelectedItem());
 
-            loadCourseData(); // Tải lại dữ liệu sau khi cập nhật
-            // Không clearFormFieldsOnly() ở đây để thông báo được hiển thị
+            loadCourseData(); // Calls refresh
             messageLabel.setText("Cập nhật môn học thành công!");
             messageLabel.setTextFill(Color.GREEN);
         } catch (NumberFormatException e) {
@@ -323,14 +312,14 @@ public class CourseView {
     }
 
     private void deleteCourse() {
-        messageLabel.setText(""); // Xóa thông báo cũ
-        messageLabel.setTextFill(Color.BLUE); // Đặt lại màu mặc định
+        messageLabel.setText("");
+        messageLabel.setTextFill(Color.BLUE);
 
         Course selectedCourse = courseTable.getSelectionModel().getSelectedItem();
         if (selectedCourse != null) {
             smsGUI.removeCourse(selectedCourse.getCourseID());
-            loadCourseData(); // Tải lại dữ liệu sau khi xóa
-            clearFormFieldsOnly(); // Xóa form và thông báo khi xóa thành công
+            loadCourseData(); // Calls refresh
+            clearFormFieldsOnly();
             messageLabel.setText("Xóa môn học thành công!");
             messageLabel.setTextFill(Color.GREEN);
         } else {
@@ -339,7 +328,6 @@ public class CourseView {
         }
     }
 
-    // Phương thức mới để hiển thị sinh viên đã đăng ký
     private void viewSelectedCourseEnrolledStudents() {
         Course selectedCourse = courseTable.getSelectionModel().getSelectedItem();
         if (selectedCourse != null) {
@@ -360,6 +348,6 @@ public class CourseView {
     }
 
     public Parent getCourseView() {
-        return mainLayout; // Trả về layout đã được khởi tạo
+        return mainLayout;
     }
 }

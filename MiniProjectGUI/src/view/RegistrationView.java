@@ -42,12 +42,12 @@ public class RegistrationView {
         studentChoiceBox.setConverter(new javafx.util.StringConverter<Student>() {
             @Override
             public String toString(Student student) {
-                return student != null ? student.getStudentID() + " - " + student.getName() + (student instanceof PartTimeStudent ? " (VLVL)" : " (TC)") : "Chọn sinh viên";
+                return student != null ? student.getStudentID() + " - " + student.getName() + (student instanceof PartTimeStudent ? " (VHVL)" : " (TC)") : "Chọn sinh viên";
             }
             @Override
             public Student fromString(String string) { return null; }
         });
-        refreshStudentChoices();
+        refreshStudentChoices(); // Initial load
         studentChoiceBox.getSelectionModel().selectFirst();
 
         courseChoiceBox = new ChoiceBox<>();
@@ -59,13 +59,13 @@ public class RegistrationView {
             @Override
             public Course fromString(String string) { return null; }
         });
-        refreshCourseChoices();
+        refreshCourseChoices(); // Initial load
         courseChoiceBox.getSelectionModel().selectFirst();
 
         courseDetailsArea = new TextArea();
         courseDetailsArea.setEditable(false);
         courseDetailsArea.setWrapText(true);
-        courseDetailsArea.setPrefRowCount(5);
+        courseDetailsArea.setPrefRowCount(10);
 
         courseChoiceBox.getSelectionModel().selectedItemProperty().addListener((obs, oldCourse, newCourse) -> {
             if (newCourse != null) {
@@ -80,14 +80,14 @@ public class RegistrationView {
         formGrid.addRow(0, new Label("Sinh viên:"), studentChoiceBox);
         formGrid.addRow(1, new Label("Khóa học:"), courseChoiceBox);
         formGrid.add(new Label("Chi tiết khóa học:"), 0, 2);
-        formGrid.add(courseDetailsArea, 0, 3, 2, 1);
-        formGrid.add(messageLabel, 0, 4, 2, 1);
+        formGrid.add(courseDetailsArea, 0, 2, 2, 1);
+        formGrid.add(messageLabel, 0, 3, 2, 1);
 
         Button registerButton = new Button("Đăng ký môn học");
         registerButton.setOnAction(e -> registerCourse());
 
         Button clearButton = new Button("Xóa form");
-        clearButton.setOnAction(e -> clearFormFieldsOnly()); // Gọi phương thức mới để chỉ xóa các trường nhập liệu
+        clearButton.setOnAction(e -> clearFormFieldsOnly());
 
         HBox buttonBox = new HBox(10);
         buttonBox.setPadding(new Insets(10));
@@ -98,16 +98,19 @@ public class RegistrationView {
         mainLayout.getChildren().addAll(new Label("ĐĂNG KÝ MÔN HỌC"), new Separator(), formGrid, buttonBox);
     }
 
-    private void refreshStudentChoices() {
+    // Make these methods public so they can be called from outside
+    public void refreshStudentChoices() {
         ObservableList<Student> students = FXCollections.observableArrayList(smsGUI.getAllStudents());
         studentChoiceBox.setItems(students);
         studentChoiceBox.getItems().add(0, null);
+        studentChoiceBox.getSelectionModel().select(0); // Select "Chọn sinh viên" after refresh
     }
 
-    private void refreshCourseChoices() {
+    public void refreshCourseChoices() {
         ObservableList<Course> courses = FXCollections.observableArrayList(smsGUI.getAllCourses());
         courseChoiceBox.setItems(courses);
         courseChoiceBox.getItems().add(0, null);
+        courseChoiceBox.getSelectionModel().select(0); // Select "Chọn khóa học" after refresh
     }
 
     private void displayCourseDetails(Course course) {
@@ -129,16 +132,15 @@ public class RegistrationView {
         courseDetailsArea.setText(sb.toString());
     }
 
-    private void clearFormFieldsOnly() { // Phương thức mới để chỉ xóa các trường
+    private void clearFormFieldsOnly() {
         studentChoiceBox.getSelectionModel().select(0);
         courseChoiceBox.getSelectionModel().select(0);
         courseDetailsArea.clear();
-        messageLabel.setText(""); // Xóa thông báo khi người dùng nhấn nút "Xóa form"
+        messageLabel.setText("");
         messageLabel.setTextFill(Color.BLUE);
     }
 
     private void registerCourse() {
-        // Luôn xóa thông báo cũ trước khi hiển thị thông báo mới
         messageLabel.setText("");
         messageLabel.setTextFill(Color.BLUE);
 
@@ -164,7 +166,7 @@ public class RegistrationView {
             if (success) {
                 messageLabel.setText("Đăng ký môn học thành công!");
                 messageLabel.setTextFill(Color.GREEN);
-                // Không gọi clearFormFieldsOnly() ở đây để thông báo được hiển thị
+                // No need to clear form here, let the user see the success message
             } else {
                 messageLabel.setText("Đăng ký môn học thất bại! (Kiểm tra sức chứa, môn tiên quyết, đã đăng ký...)");
                 messageLabel.setTextFill(Color.RED);

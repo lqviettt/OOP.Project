@@ -57,7 +57,7 @@ public class GradeView {
             public Course fromString(String string) { return null; }
         });
 
-        refreshStudentAndCourseChoices();
+        refreshStudentAndCourseChoices(); // Initial load
         studentChoiceBox.getSelectionModel().selectFirst();
         courseChoiceBox.getSelectionModel().selectFirst();
 
@@ -76,7 +76,7 @@ public class GradeView {
         submitButton.setOnAction(e -> submitGrade());
 
         Button clearButton = new Button("Xóa form");
-        clearButton.setOnAction(e -> clearFormFieldsOnly()); // Gọi phương thức mới để chỉ xóa các trường nhập liệu
+        clearButton.setOnAction(e -> clearFormFieldsOnly());
 
         HBox buttonBox = new HBox(10);
         buttonBox.setPadding(new Insets(10));
@@ -87,27 +87,29 @@ public class GradeView {
         mainLayout.getChildren().addAll(new Label("NHẬP ĐIỂM"), new Separator(), formGrid, buttonBox);
     }
 
-    private void refreshStudentAndCourseChoices() {
+    // Make public for external refresh
+    public void refreshStudentAndCourseChoices() {
         ObservableList<Student> students = FXCollections.observableArrayList(smsGUI.getAllStudents());
         studentChoiceBox.setItems(students);
         studentChoiceBox.getItems().add(0, null);
+        studentChoiceBox.getSelectionModel().select(0); // Select default
 
         ObservableList<Course> courses = FXCollections.observableArrayList(smsGUI.getAllCourses());
         courseChoiceBox.setItems(courses);
         courseChoiceBox.getItems().add(0, null);
+        courseChoiceBox.getSelectionModel().select(0); // Select default
     }
 
-    private void clearFormFieldsOnly() { // Phương thức mới để chỉ xóa các trường
+    private void clearFormFieldsOnly() {
         studentChoiceBox.getSelectionModel().select(0);
         courseChoiceBox.getSelectionModel().select(0);
         midtermScoreField.clear();
         finalScoreField.clear();
-        messageLabel.setText(""); // Xóa thông báo khi người dùng nhấn nút "Xóa form"
+        messageLabel.setText("");
         messageLabel.setTextFill(Color.BLUE);
     }
 
     private void submitGrade() {
-        // Luôn xóa thông báo cũ trước khi hiển thị thông báo mới
         messageLabel.setText("");
         messageLabel.setTextFill(Color.BLUE);
 
@@ -133,9 +135,6 @@ public class GradeView {
             smsGUI.inputGrade(selectedStudent.getStudentID(), selectedCourse.getCourseID(), midtermScore, finalScore);
             messageLabel.setText("Nhập điểm thành công!");
             messageLabel.setTextFill(Color.GREEN);
-            // Không gọi clearFormFieldsOnly() ở đây để thông báo được hiển thị
-            // Bạn có thể cân nhắc gọi clearFormFieldsOnly() sau một khoảng thời gian ngắn
-            // hoặc khi người dùng thực hiện hành động khác
         } catch (NumberFormatException e) {
             messageLabel.setText("Điểm giữa kỳ và cuối kỳ phải là số hợp lệ.");
             messageLabel.setTextFill(Color.RED);

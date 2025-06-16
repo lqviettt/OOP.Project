@@ -43,7 +43,7 @@ public class PartTimeStudent extends Student {
     @Override
     public void calculateGPA() {
         if (fixedCourseList.isEmpty()) {
-            setGpa(0.0f); // GPA mặc định nếu không có môn học
+            setGpa(0.0f);
             return;
         }
 
@@ -65,7 +65,7 @@ public class PartTimeStudent extends Student {
         if (totalCredits != 0) {
             setGpa((float) (totalGradePoints / totalCredits));
         } else {
-            setGpa(0.0f); // Nếu không có tín chỉ được hoàn thành, GPA là 0.0
+            setGpa(0.0f);
         }
     }
 
