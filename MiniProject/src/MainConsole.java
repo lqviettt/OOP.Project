@@ -16,21 +16,41 @@ public class MainConsole {
         Scanner scanner = new Scanner(System.in);
 
         // Tạo một số sinh viên và môn học mẫu
-        Course math101 = new Course("MATH101", "Giải tích 1", 3, 30, 70, 50);
-        Course prog101 = new Course("PROG101", "Lập trình cơ bản", 4, 40, 60, 40, math101); // PROG101 có MATH101 là tiên quyết
-        Course web201 = new Course("WEB201", "Lập trình Web", 3, 30, 70, 30, prog101);
+        Course gt1 = new Course("GT1", "Giải tích 1", 3, 30, 70, 50);
+        Course gt2 = new Course("GT2", "Giải tích 2", 3, 30, 70, 50);
+        Course dev = new Course("DEV", "Lập trình cơ bản", 4, 40, 60, 40, gt1); // PROG101 có MATH101 là tiên quyết
+        Course web = new Course("WEB", "Lập trình Web", 3, 30, 70, 30, dev);
+        Course cs = new Course("CS1", "Nhập môn Khoa học Máy tính", 3, 30, 70, 50);
+        Course algo = new Course("ALGO", "Thuật toán", 3, 30, 70, 50, dev);
+        Course db = new Course("DB", "Cơ sở dữ liệu", 3, 30, 70, 40, dev);
+        Course oop = new Course("OOP", "Lập trình Hướng đối tượng", 3, 40, 60, 50, dev);
+        Course ai = new Course("AI", "Trí tuệ nhân tạo", 3, 40, 60, 60, algo);
+        Course ml = new Course("ML", "Machine Learning", 3, 40, 60, 60, ai);
 
-        sms.addCourse(math101);
-        sms.addCourse(prog101);
-        sms.addCourse(web201);
+        sms.addCourse(gt1);
+        sms.addCourse(gt2);
+        sms.addCourse(dev);
+        sms.addCourse(web);
+        sms.addCourse(cs);
+        sms.addCourse(algo);
+        sms.addCourse(db);
+        sms.addCourse(oop);
+        sms.addCourse(ai);
+        sms.addCourse(ml);
 
-        CreditBasedStudent student1 = new CreditBasedStudent("S1001", "Nguyen Van A", LocalDate.of(2003, 5, 15), "a.nguyen@example.com", 3);
-        PartTimeStudent student2 = new PartTimeStudent("S2002", "Tran Thi B", LocalDate.of(1998, 10, 20), "b.tran@example.com", Arrays.asList(math101, prog101));
+        sms.addStudent(new PartTimeStudent("P1", "Tran Thi B", LocalDate.of(1998, 10, 20), "b.tran@example.com", Arrays.asList(gt1, gt2, dev)));
+        sms.addStudent(new PartTimeStudent("P2", "Hoang Thi E", LocalDate.of(1999, 8, 30), "e.hoang@example.com", Arrays.asList(cs, gt1, oop)));
+        sms.addStudent(new PartTimeStudent("P3", "Vo Thi H", LocalDate.of(1997, 9, 3), "h.vo@example.com", Arrays.asList(gt2, cs)));
+        sms.addStudent(new CreditBasedStudent("C1", "Nguyen Van A", LocalDate.of(2003, 5, 15), "a.nguyen@example.com", 3));
+        sms.addStudent(new CreditBasedStudent("C2", "Le Thi C", LocalDate.of(2002, 3, 18), "c.le@example.com", 3));
+        sms.addStudent(new CreditBasedStudent("C3", "Pham Van D", LocalDate.of(2004, 12, 5), "d.pham@example.com", 4));
+        sms.addStudent(new CreditBasedStudent("C4", "Nguyen Van F", LocalDate.of(2001, 7, 22), "f.nguyen@example.com", 3));
+        sms.addStudent(new CreditBasedStudent("C5", "Tran Van G", LocalDate.of(2003, 1, 14), "g.tran@example.com", 3));
+        sms.addStudent(new CreditBasedStudent("C6", "Bui Van I", LocalDate.of(2000, 11, 27), "i.bui@example.com", 4));
+        sms.addStudent(new CreditBasedStudent("C7", "Do Thi J", LocalDate.of(2003, 6, 11), "j.do@example.com", 3));
 
-        sms.addStudent(student1);
-        sms.addStudent(student2);
 
-        // Menu điều khiển (ví dụ)
+        // Menu điều khiển
         int choice;
         do {
             System.out.println("\n--- Hệ Thống Quản Lý Sinh Viên (Console) ---");
@@ -39,12 +59,12 @@ public class MainConsole {
             System.out.println("3. Thêm môn học");
             System.out.println("4. Xóa môn học");
             System.out.println("5. Đăng ký môn học (SV tín chỉ)");
-            System.out.println("6. Nhập điểm");
-            System.out.println("7. Xem bảng điểm");
+            System.out.println("6. Nhập điểm cho sinh viên");
+            System.out.println("7. Xem bảng điểm của sinh viên");
             System.out.println("8. Kiểm tra tốt nghiệp");
             System.out.println("9. Hiển thị danh sách sinh viên");
             System.out.println("10. Hiển thị danh sách môn học");
-            System.out.println("11. Hiển thị danh sách môn học đã đăng ký của sinh viên");
+            System.out.println("11. Hiển thị danh sách môn đang học của sinh viên");
             System.out.println("12. Hiển thị danh sách sinh viên đã đăng ký môn học");
             System.out.println("0. Thoát");
             System.out.print("Chọn chức năng: ");

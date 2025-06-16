@@ -1,3 +1,5 @@
+package model;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -130,7 +132,7 @@ public class StudentManagementSystem {
                 grade.setMidtermScore(midtermScore);
                 grade.setFinalScore(finalScore);
                 System.out.println("Đã cập nhật điểm cho sinh viên " + student.getName() + " môn " + course.getCourseName());
-                course.setFinalGradeForStudent(student, grade.getFinalGrade()); // Cập nhật điểm trong Course
+                course.setFinalGradeForStudent(student, grade.getFinalGrade()); // Cập nhật điểm trong model.Course
                 return;
             }
         }
@@ -138,7 +140,7 @@ public class StudentManagementSystem {
         // Nếu chưa có điểm, tạo mới
         Grade newGrade = new Grade(student, course, midtermScore, finalScore);
         grades.add(newGrade);
-        course.setFinalGradeForStudent(student, newGrade.getFinalGrade()); // Lưu điểm cuối kỳ vào Course
+        course.setFinalGradeForStudent(student, newGrade.getFinalGrade()); // Lưu điểm cuối kỳ vào model.Course
         System.out.println("Đã nhập điểm cho sinh viên " + student.getName() + " môn " + course.getCourseName());
 
         if (student instanceof CreditBasedStudent) {
