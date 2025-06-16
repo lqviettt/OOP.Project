@@ -7,6 +7,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.BorderPane; // Import BorderPane
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -39,10 +40,12 @@ public class StudentView {
     private TextArea registeredCoursesArea;
     private Button viewRegisteredCoursesButton;
 
+    private BorderPane mainLayout; // Thay đổi từ VBox sang BorderPane
+
     public StudentView(StudentManagementSystemGUI smsGUI) {
         this.smsGUI = smsGUI;
         initializeUI();
-        loadStudentData();
+        loadStudentData(); // Tải dữ liệu ban đầu
     }
 
     private void initializeUI() {
@@ -73,6 +76,7 @@ public class StudentView {
         });
 
         messageLabel = new Label("");
+        messageLabel.setTextFill(Color.BLUE); // Mặc định màu xanh
 
         formGrid.addRow(0, new Label("ID:"), idField);
         formGrid.addRow(1, new Label("Tên:"), nameField);
@@ -90,7 +94,7 @@ public class StudentView {
         Button deleteButton = new Button("Xóa");
         deleteButton.setOnAction(e -> deleteStudent());
         Button clearButton = new Button("Xóa form");
-        clearButton.setOnAction(e -> clearForm());
+        clearButton.setOnAction(e -> clearFormFieldsOnly()); // Gọi phương thức mới để chỉ xóa các trường
 
         HBox buttonBox = new HBox(10);
         buttonBox.setPadding(new Insets(10));
@@ -120,7 +124,6 @@ public class StudentView {
             return new ReadOnlyStringWrapper("");
         });
 
-
         studentTable.getColumns().addAll(idCol, nameCol, dobCol, emailCol, gpaCol, graduationStatusCol, typeCol);
 
         studentTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
@@ -142,8 +145,10 @@ public class StudentView {
                 }
                 // Tự động hiển thị môn học đã đăng ký khi chọn sinh viên
                 viewSelectedStudentRegisteredCourses();
+                messageLabel.setText(""); // Xóa thông báo khi chọn một sinh viên mới
+                messageLabel.setTextFill(Color.BLUE);
             } else {
-                clearForm();
+                clearFormFieldsOnly(); // Khi không có lựa chọn nào, reset form
             }
         });
 
@@ -158,19 +163,34 @@ public class StudentView {
         viewRegisteredCoursesButton.setOnAction(e -> viewSelectedStudentRegisteredCourses());
 
 
-        VBox layout = new VBox(10);
-        layout.setPadding(new Insets(10));
-        layout.getChildren().addAll(
+        // --- Cấu trúc layout bằng BorderPane ---
+        mainLayout = new BorderPane();
+        mainLayout.setPadding(new Insets(10));
+
+        // VBox cho phần bên trái (Form, Buttons, Table)
+        VBox leftPanel = new VBox(10);
+        leftPanel.setPadding(new Insets(0, 10, 0, 0)); // Padding bên phải để tạo khoảng cách
+        leftPanel.getChildren().addAll(
                 new Label("QUẢN LÝ SINH VIÊN"),
                 new Separator(),
                 formGrid,
                 buttonBox,
-                studentTable,
-                new Separator(), // Thêm phân cách
-                new Label("MÔN HỌC ĐÃ ĐĂNG KÝ (SINH VIÊN ĐANG CHỌN)"), // Tiêu đề mới
-                viewRegisteredCoursesButton, // Nút xem
-                registeredCoursesArea // Vùng hiển thị
+                studentTable
         );
+
+        // VBox cho phần bên phải (Registered Courses)
+        VBox rightPanel = new VBox(10);
+        rightPanel.setPadding(new Insets(0, 0, 0, 10)); // Padding bên trái để tạo khoảng cách
+        rightPanel.setPrefWidth(300); // Đặt chiều rộng ưu tiên cho panel bên phải
+        rightPanel.getChildren().addAll(
+                new Label("MÔN HỌC ĐÃ ĐĂNG KÝ (SINH VIÊN ĐANG CHỌN)"),
+                new Separator(),
+                viewRegisteredCoursesButton,
+                registeredCoursesArea
+        );
+
+        mainLayout.setCenter(leftPanel);
+        mainLayout.setRight(rightPanel);
     }
 
     private void loadStudentData() {
@@ -178,7 +198,7 @@ public class StudentView {
         studentTable.setItems(studentObservableList);
     }
 
-    private void clearForm() {
+    private void clearFormFieldsOnly() { // Đổi tên để rõ ràng hơn
         idField.clear();
         nameField.clear();
         dobPicker.setValue(null);
@@ -187,12 +207,16 @@ public class StudentView {
         requiredCreditsField.clear();
         requiredCreditsField.setManaged(false);
         requiredCreditsField.setVisible(false);
-        messageLabel.setText("");
+        messageLabel.setText(""); // Xóa thông báo khi người dùng nhấn nút "Xóa form"
+        messageLabel.setTextFill(Color.BLUE);
         studentTable.getSelectionModel().clearSelection();
         registeredCoursesArea.clear(); // Xóa nội dung khi clear form
     }
 
     private void addStudent() {
+        messageLabel.setText(""); // Xóa thông báo cũ
+        messageLabel.setTextFill(Color.BLUE); // Đặt lại màu mặc định
+
         try {
             String studentId = idField.getText();
             String name = nameField.getText();
@@ -201,42 +225,63 @@ public class StudentView {
 
             if (studentId.isEmpty() || name.isEmpty() || dob == null || email.isEmpty()) {
                 messageLabel.setText("Vui lòng điền đầy đủ thông tin.");
+                messageLabel.setTextFill(Color.RED);
                 return;
             }
 
             if (smsGUI.findStudentById(studentId) != null) {
                 messageLabel.setText("ID sinh viên đã tồn tại.");
+                messageLabel.setTextFill(Color.RED);
                 return;
             }
 
             Student newStudent;
             if (isCreditBasedCheckBox.isSelected()) {
                 int requiredCredits = Integer.parseInt(requiredCreditsField.getText());
+                if (requiredCredits <= 0) {
+                    messageLabel.setText("Tín chỉ yêu cầu phải là số dương.");
+                    messageLabel.setTextFill(Color.RED);
+                    return;
+                }
                 newStudent = new CreditBasedStudent(studentId, name, dob, email, requiredCredits);
             } else {
-                // Đối với PartTimeStudent, khởi tạo với một danh sách rỗng, có thể cập nhật sau
                 newStudent = new PartTimeStudent(studentId, name, dob, email, new ArrayList<>());
             }
             smsGUI.addStudent(newStudent);
             loadStudentData();
-            clearForm();
+            // Không clearFormFieldsOnly() ở đây để thông báo được hiển thị
             messageLabel.setText("Thêm sinh viên thành công!");
+            messageLabel.setTextFill(Color.GREEN);
         } catch (NumberFormatException e) {
             messageLabel.setText("Tín chỉ yêu cầu phải là số.");
+            messageLabel.setTextFill(Color.RED);
         } catch (DateTimeParseException e) {
             messageLabel.setText("Ngày sinh không hợp lệ. Vui lòng sử dụng định dạng YYYY-MM-DD.");
+            messageLabel.setTextFill(Color.RED);
         } catch (Exception e) {
             messageLabel.setText("Lỗi khi thêm sinh viên: " + e.getMessage());
+            messageLabel.setTextFill(Color.RED);
         }
     }
 
     private void updateStudent() {
+        messageLabel.setText(""); // Xóa thông báo cũ
+        messageLabel.setTextFill(Color.BLUE); // Đặt lại màu mặc định
+
         try {
             String studentId = idField.getText();
             Student existingStudent = smsGUI.findStudentById(studentId);
 
             if (existingStudent == null) {
                 messageLabel.setText("Không tìm thấy sinh viên để cập nhật.");
+                messageLabel.setTextFill(Color.RED);
+                return;
+            }
+
+            // Kiểm tra các trường bắt buộc không được rỗng khi cập nhật
+            if (nameField.getText().isEmpty() || dobPicker.getValue() == null || emailField.getText().isEmpty()) {
+                messageLabel.setText("Vui lòng điền đầy đủ thông tin.");
+                messageLabel.setTextFill(Color.RED);
                 return;
             }
 
@@ -244,38 +289,60 @@ public class StudentView {
             existingStudent.setDob(dobPicker.getValue());
             existingStudent.setEmail(emailField.getText());
 
-            if (isCreditBasedCheckBox.isSelected() && existingStudent instanceof CreditBasedStudent) {
-                ((CreditBasedStudent) existingStudent).setRequiredCredits(Integer.parseInt(requiredCreditsField.getText()));
-            } else if (!isCreditBasedCheckBox.isSelected() && existingStudent instanceof PartTimeStudent) {
-                // Không làm gì đặc biệt cho PartTimeStudent khi cập nhật thông tin chung
-                // Việc cập nhật fixedCourseList cần một giao diện riêng nếu muốn làm.
-            } else {
-                messageLabel.setText("Không thể thay đổi loại sinh viên sau khi tạo.");
-                return;
+            if (isCreditBasedCheckBox.isSelected()) {
+                int requiredCredits = Integer.parseInt(requiredCreditsField.getText());
+                if (requiredCredits <= 0) {
+                    messageLabel.setText("Tín chỉ yêu cầu phải là số dương.");
+                    messageLabel.setTextFill(Color.RED);
+                    return;
+                }
+                if (existingStudent instanceof CreditBasedStudent) {
+                    ((CreditBasedStudent) existingStudent).setRequiredCredits(requiredCredits);
+                } else {
+                    messageLabel.setText("Không thể thay đổi loại sinh viên từ Bán thời gian sang Tín chỉ.");
+                    messageLabel.setTextFill(Color.RED);
+                    return;
+                }
+            } else { // Nếu checkbox không được chọn, và sinh viên là CreditBasedStudent
+                if (existingStudent instanceof CreditBasedStudent) {
+                    messageLabel.setText("Không thể thay đổi loại sinh viên từ Tín chỉ sang Bán thời gian.");
+                    messageLabel.setTextFill(Color.RED);
+                    return;
+                }
+                // Nếu là PartTimeStudent và checkbox không được chọn, không làm gì đặc biệt
             }
 
             smsGUI.updateStudentInfo(existingStudent);
             loadStudentData();
-            clearForm();
+            // Không clearFormFieldsOnly() ở đây để thông báo được hiển thị
             messageLabel.setText("Cập nhật sinh viên thành công!");
+            messageLabel.setTextFill(Color.GREEN);
         } catch (NumberFormatException e) {
             messageLabel.setText("Tín chỉ yêu cầu phải là số.");
+            messageLabel.setTextFill(Color.RED);
         } catch (DateTimeParseException e) {
             messageLabel.setText("Ngày sinh không hợp lệ. Vui lòng sử dụng định dạng YYYY-MM-DD.");
+            messageLabel.setTextFill(Color.RED);
         } catch (Exception e) {
             messageLabel.setText("Lỗi khi cập nhật sinh viên: " + e.getMessage());
+            messageLabel.setTextFill(Color.RED);
         }
     }
 
     private void deleteStudent() {
+        messageLabel.setText(""); // Xóa thông báo cũ
+        messageLabel.setTextFill(Color.BLUE); // Đặt lại màu mặc định
+
         Student selectedStudent = studentTable.getSelectionModel().getSelectedItem();
         if (selectedStudent != null) {
             smsGUI.removeStudent(selectedStudent.getStudentID());
             loadStudentData();
-            clearForm();
+            clearFormFieldsOnly(); // Xóa form và thông báo khi xóa thành công
             messageLabel.setText("Xóa sinh viên thành công!");
+            messageLabel.setTextFill(Color.GREEN);
         } else {
             messageLabel.setText("Vui lòng chọn sinh viên cần xóa.");
+            messageLabel.setTextFill(Color.RED);
         }
     }
 
@@ -299,119 +366,7 @@ public class StudentView {
         }
     }
 
-
     public Parent getStudentView() {
-        VBox layout = new VBox(10);
-        layout.setPadding(new Insets(10));
-
-        // Re-initialize UI components (similar to initializeUI, but within getStudentView)
-        GridPane formGrid = new GridPane();
-        formGrid.setHgap(10);
-        formGrid.setVgap(10);
-        formGrid.setPadding(new Insets(10));
-
-        idField = new TextField(); idField.setPromptText("ID Sinh viên");
-        nameField = new TextField(); nameField.setPromptText("Tên sinh viên");
-        dobPicker = new DatePicker(); dobPicker.setPromptText("Ngày sinh (YYYY-MM-DD)");
-        emailField = new TextField(); emailField.setPromptText("Email");
-        isCreditBasedCheckBox = new CheckBox("Là Sinh viên Tín chỉ?");
-        requiredCreditsField = new TextField(); requiredCreditsField.setPromptText("Tín chỉ yêu cầu");
-        requiredCreditsField.setManaged(false);
-        requiredCreditsField.setVisible(false);
-        isCreditBasedCheckBox.setOnAction(e -> {
-            boolean isCredit = isCreditBasedCheckBox.isSelected();
-            requiredCreditsField.setManaged(isCredit);
-            requiredCreditsField.setVisible(isCredit);
-        });
-        messageLabel = new Label("");
-
-        formGrid.addRow(0, new Label("ID:"), idField);
-        formGrid.addRow(1, new Label("Tên:"), nameField);
-        formGrid.addRow(2, new Label("Ngày sinh:"), dobPicker);
-        formGrid.addRow(3, new Label("Email:"), emailField);
-        formGrid.addRow(4, isCreditBasedCheckBox);
-        formGrid.addRow(5, new Label("Tín chỉ yêu cầu:"), requiredCreditsField);
-        formGrid.add(messageLabel, 0, 6, 2, 1);
-
-        Button addButton = new Button("Thêm"); addButton.setOnAction(e -> addStudent());
-        Button updateButton = new Button("Cập nhật"); updateButton.setOnAction(e -> updateStudent());
-        Button deleteButton = new Button("Xóa"); deleteButton.setOnAction(e -> deleteStudent());
-        Button clearButton = new Button("Xóa form"); clearButton.setOnAction(e -> clearForm());
-
-        HBox buttonBox = new HBox(10);
-        buttonBox.setPadding(new Insets(10));
-        buttonBox.getChildren().addAll(addButton, updateButton, deleteButton, clearButton);
-
-        studentTable = new TableView<>();
-        TableColumn<Student, String> idCol = new TableColumn<>("ID");
-        idCol.setCellValueFactory(new PropertyValueFactory<>("studentID"));
-        TableColumn<Student, String> nameCol = new TableColumn<>("Tên");
-        nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
-        TableColumn<Student, LocalDate> dobCol = new TableColumn<>("Ngày sinh");
-        dobCol.setCellValueFactory(new PropertyValueFactory<>("dob"));
-        TableColumn<Student, String> emailCol = new TableColumn<>("Email");
-        emailCol.setCellValueFactory(new PropertyValueFactory<>("email"));
-        TableColumn<Student, Float> gpaCol = new TableColumn<>("GPA");
-        gpaCol.setCellValueFactory(new PropertyValueFactory<>("gpa"));
-        TableColumn<Student, Boolean> graduationStatusCol = new TableColumn<>("Tốt nghiệp");
-        graduationStatusCol.setCellValueFactory(new PropertyValueFactory<>("graduationStatus"));
-        TableColumn<Student, String> typeCol = new TableColumn<>("Loại SV");
-        typeCol.setCellValueFactory(cellData -> {
-            if (cellData.getValue() instanceof CreditBasedStudent) {
-                return new ReadOnlyStringWrapper("Tín chỉ");
-            } else if (cellData.getValue() instanceof PartTimeStudent) {
-                return new ReadOnlyStringWrapper("Bán thời gian");
-            }
-            return new ReadOnlyStringWrapper("");
-        });
-        studentTable.getColumns().addAll(idCol, nameCol, dobCol, emailCol, gpaCol, graduationStatusCol, typeCol);
-
-        studentTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-                idField.setText(newSelection.getStudentID());
-                nameField.setText(newSelection.getName());
-                dobPicker.setValue(newSelection.getDob());
-                emailField.setText(newSelection.getEmail());
-                if (newSelection instanceof CreditBasedStudent) {
-                    isCreditBasedCheckBox.setSelected(true);
-                    requiredCreditsField.setManaged(true);
-                    requiredCreditsField.setVisible(true);
-                    requiredCreditsField.setText(String.valueOf(((CreditBasedStudent) newSelection).getRequiredCredits()));
-                } else {
-                    isCreditBasedCheckBox.setSelected(false);
-                    requiredCreditsField.setManaged(false);
-                    requiredCreditsField.setVisible(false);
-                    requiredCreditsField.clear();
-                }
-                viewSelectedStudentRegisteredCourses(); // Display courses for newly selected student
-            } else {
-                clearForm();
-            }
-        });
-
-        // New section for registered courses
-        registeredCoursesArea = new TextArea();
-        registeredCoursesArea.setEditable(false);
-        registeredCoursesArea.setWrapText(true);
-        registeredCoursesArea.setPromptText("Môn học đã đăng ký của sinh viên được chọn sẽ hiển thị ở đây.");
-        registeredCoursesArea.setPrefRowCount(7);
-        viewRegisteredCoursesButton = new Button("Xem Môn học đã ĐK");
-        viewRegisteredCoursesButton.setOnAction(e -> viewSelectedStudentRegisteredCourses());
-
-
-        loadStudentData(); // Load data when view is requested
-
-        layout.getChildren().addAll(
-                new Label("QUẢN LÝ SINH VIÊN"),
-                new Separator(),
-                formGrid,
-                buttonBox,
-                studentTable,
-                new Separator(),
-                new Label("MÔN HỌC ĐÃ ĐĂNG KÝ (SINH VIÊN ĐANG CHỌN)"),
-                viewRegisteredCoursesButton,
-                registeredCoursesArea
-        );
-        return layout;
+        return mainLayout; // Trả về layout đã được khởi tạo
     }
 }

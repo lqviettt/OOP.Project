@@ -98,7 +98,6 @@ public class CreditBasedStudent extends Student {
         } else {
             for (Course course : completedCourses) {
                 Double finalGrade = course.getFinalGradeForStudent(this);
-                // Chỉ hiển thị môn học đã hoàn thành với điểm số và trạng thái đỗ/trượt
                 if (finalGrade != null) {
                     String status = finalGrade >= 4 ? "ĐỖ" : "TRƯỢT";
                     System.out.println("- " + course.getCourseName() + " (" + course.getCourseID() + "): " + String.format("%.2f", finalGrade) + " - " + status);
